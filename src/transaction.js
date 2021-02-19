@@ -101,13 +101,17 @@ class Transaction {
         }
         if (assetMetadataHash !== undefined && assetMetadataHash.length !== 0) {
             if (typeof(assetMetadataHash) === 'string') {
-                const encoded = Buffer.from(assetMetadataHash);
-                if (encoded.byteLength !== ASSET_METADATA_HASH_LENGTH) {
-                    throw Error("assetMetadataHash must be a " + ASSET_METADATA_HASH_LENGTH + " byte Uint8Array or string.");
-                }
-                assetMetadataHash = new Uint8Array(encoded);
-            } else if (assetMetadataHash.constructor !== Uint8Array || assetMetadataHash.byteLength !== ASSET_METADATA_HASH_LENGTH)
+                assetMetadataHash = new Uint8Array(Buffer.from(assetMetadataHash));
+            }
+            
+            if (assetMetadataHash.constructor !== Uint8Array || assetMetadataHash.byteLength !== ASSET_METADATA_HASH_LENGTH) {
                 throw Error("assetMetadataHash must be a " + ASSET_METADATA_HASH_LENGTH + " byte Uint8Array or string.");
+            }
+
+            if (assetMetadataHash.every(value => value === 0)) {
+                // if hash contains all 0s, omit it
+                assetMetadataHash = undefined;
+            }
         } else {
             assetMetadataHash = undefined;
         }
@@ -120,6 +124,10 @@ class Transaction {
         if (lease !== undefined) {
             if (lease.constructor !== Uint8Array) throw Error("lease must be a Uint8Array.");
             if (lease.length !== ALGORAND_TRANSACTION_LEASE_LENGTH) throw Error("lease must be of length " + ALGORAND_TRANSACTION_LEASE_LENGTH.toString() + ".");
+            if (lease.every(value => value === 0)) {
+                // if lease contains all 0s, omit it
+                lease = new Uint8Array(0);
+            }
         }
         else {
             lease = new Uint8Array(0);
